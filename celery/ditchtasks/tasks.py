@@ -11,8 +11,9 @@ print("BasePath:%s" % BASE_PATH)
 sys.path.append(SCRIPT_PATH)
 print("Appended script path:%s" % SCRIPT_PATH)
 
-from celery import task
+from celery import task,chain
 from celery.utils.log import get_task_logger
+from dbtasks.tasks import onstatus
 
 logger = get_task_logger('ditch')
 
@@ -53,4 +54,16 @@ def north_enable(bEnable):
     logger.info("Set North Enable to %s" % bEnable)
     api.northEnable(bEnable)
     logger.info("Done")
+
+
+@task()
+def update_database():
+
+    ch = chain(status.s() | onstatus.s())
+
+    result = ch.apply_async()
+
+    result = status.delay()
+    status.apply_async(onstatus.s())
+
 
