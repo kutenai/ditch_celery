@@ -43,7 +43,7 @@ class IrrigationAPI(object):
     def setupSerial(self,bFast = False):
         """
         Determine the serial port, then open that port with the default
-        buad rate.
+        baud rate.
         """
 
         if bFast:
@@ -99,6 +99,7 @@ class IrrigationAPI(object):
         """
         self.Initialize()
 
+        self.ser.flushInput()
 
         if packet[-1] != '\n':
             packet = packet + '\n'
@@ -195,7 +196,7 @@ class IrrigationAPI(object):
             self.lprint("Set %s to on" % cmd)
         else:
             self.sendPacket('%s 0' % cmd)
-            self.lprint("Set %s to on" % cmd)
+            self.lprint("Set %s to off" % cmd)
 
     def pumpEnable(self,bEnable):
         """

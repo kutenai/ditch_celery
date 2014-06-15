@@ -1,0 +1,10 @@
+#!/bin/bash
+
+file=~/Library/LaunchAgents/org.celeryq.worker.plist
+name=org.celeryq.worker
+
+launchctl stop $name
+launchctl unload $file
+launchctl load $file
+launchctl start $name
+
