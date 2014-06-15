@@ -6,6 +6,7 @@ logdir=/home/ec2-user/django/logs/celery
 
 source $envbase/$envname/bin/activate
 
-python celery -A ditchapp -Q db --loglevel=INFO --logfile=$logdir/worker.log --autoreload
+celery worker -A ditchapp -Q db --loglevel=INFO --logfile=$logdir/worker_db.log --autoreload
+
 
 
