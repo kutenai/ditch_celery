@@ -7,7 +7,14 @@ from celery.utils.log import get_task_logger
 
 logger = get_task_logger('ditch')
 
-from celery import task
+from celery import task,shared_task,chain
+from ditchtasks.tasks import status
+
+@shared_task()
+def update_database():
+    ch = chain(status.s() | onstatus.s())
+    ch.apply_async()
+
 
 @task()
 def onstatus(d):

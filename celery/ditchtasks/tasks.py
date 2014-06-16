@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import sys
 from unipath import Path
 import json
+import redis
 
 BASE_PATH = Path(__file__).ancestor(2)
 SCRIPT_PATH = BASE_PATH.ancestor(1).child('scripts')
@@ -11,9 +12,8 @@ print("BasePath:%s" % BASE_PATH)
 sys.path.append(SCRIPT_PATH)
 print("Appended script path:%s" % SCRIPT_PATH)
 
-from celery import task,chain
+from celery import task
 from celery.utils.log import get_task_logger
-from dbtasks.tasks import onstatus
 
 logger = get_task_logger('ditch')
 
@@ -25,6 +25,8 @@ api = IrrigationAPI()
 def status():
     logger.info("Getting system status..")
     stat = api.getSystemStatus()
+    r = redis.StrictRedis(host='gardenbuzz.com', port=6379, db=3)
+    r.set('ditch_status',json.dumps(stat))
 
     return json.dumps(stat)
 
@@ -56,14 +58,5 @@ def north_enable(bEnable):
     logger.info("Done")
 
 
-@task()
-def update_database():
-
-    ch = chain(status.s() | onstatus.s())
-
-    result = ch.apply_async()
-
-    result = status.delay()
-    status.apply_async(onstatus.s())
 
 
