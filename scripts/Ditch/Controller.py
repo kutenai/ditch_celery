@@ -23,7 +23,7 @@ class DitchController(DitchRedisHandler):
     """
 
     def __init__(self):
-        super(DitchController, self).__init__('localhost', 6388, 0)
+        super(DitchController, self).__init__('gardenbuzz.com', 6379, 5)
         self.hi = True
         self.redisConnect()
 

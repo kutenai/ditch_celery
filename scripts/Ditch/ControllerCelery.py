@@ -5,9 +5,7 @@ import json
 
 from celery import Celery,group,chain
 
-sys.path.append('/Users/kutenai/proj/bondiproj/pumpcontrol/ditch_mgr')
-
-from mgr.tasks import pump_enable, south_enable, north_enable, status
+from ditchtasks.tasks import pump_enable, south_enable, north_enable, status
 
 class DitchController(object):
     """
@@ -29,12 +27,13 @@ class DitchController(object):
 
     def __init__(self):
         self.hi = True
+        self.timeout = 20
 
     def allOff(self):
         print("Setting all controls to off.")
-        pump_enable.delay(False).get()
-        south_enable.delay(False).get()
-        north_enable.delay(False).get()
+        pump_enable.delay(False).get(timeout=self.timeout)
+        south_enable.delay(False).get(timeout=self.timeout)
+        north_enable.delay(False).get(timeout=self.timeout)
 
     def runNorth(self):
         print("Turning on North Zone.")
@@ -55,15 +54,15 @@ class DitchController(object):
 
 
     def southEnable(self, bOn):
-        south_enable.delay(bOn)
+        south_enable.delay(bOn).get(timeout=self.timeout)
 
 
     def pumpEnable(self, bOn):
-        pump_enable.delay(bOn)
+        pump_enable.delay(bOn).get(timeout=self.timeout)
 
 
     def northEnable(self, bOn):
-        north_enable.delay(bOn)
+        north_enable.delay(bOn).get(timeout=self.timeout)
 
 
     def isPumpOn(self):
@@ -86,23 +85,30 @@ class DitchController(object):
 
 
     def getSystemValue(self, key, default):
-        stat = status.delay().get()
+        stat = status.delay().get(timeout=self.timeout)
 
 
     def getSystemStatus(self):
-        stat = status.delay().get()
-        return json.loads(stat)
+        try:
+            stat = status.delay().get(timeout=self.timeout)
+            print("Got the status... now decode it")
+            return json.loads(stat)
+        except:
+            print("Failed to retrieve the status. Sorry")
+
+        return None
 
 
     def showSystemStatus(self):
         print("Showing System Status:")
         stat = self.getSystemStatus()
 
-        print("Pump: Call:%s On:%s" % (stat['PC'], stat['P']))
-        print("North: Call:%s On:%s" % (stat['NC'], stat['N']))
-        print("South: Call:%s On:%s" % (stat['SC'], stat['S']))
-        print("Ditch: %s\" (%d)" % ("?", int(stat['Ditch'])))
-        print("Sump: %s\" (%d)" % ("?", int(stat['Sump'])))
+        if stat:
+            print("Pump: Call:%s On:%s" % (stat['PC'], stat['P']))
+            print("North: Call:%s On:%s" % (stat['NC'], stat['N']))
+            print("South: Call:%s On:%s" % (stat['SC'], stat['S']))
+            print("Ditch: %s\" (%d)" % ("?", int(stat['Ditch'])))
+            print("Sump: %s\" (%d)" % ("?", int(stat['Sump'])))
 
 
     def lprint(self, string):

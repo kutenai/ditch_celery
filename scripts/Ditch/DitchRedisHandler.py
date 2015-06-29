@@ -19,7 +19,18 @@ class DitchRedisHandler(object):
         self.isConnected = False
         self.myid = "None"
 
+    def lprint(self, txt):
+        """Basic implementation. Overriden generaly """
+        print(txt)
+
     def redisConnect(self):
+        """
+        Connect to the redis server.
+        Ping the server to make sure it is connected, fail with an exception if it does
+        not connect.
+
+        :return:
+        """
 
         self.myid = 'server:' + socket.gethostname() + ":%d" % os.getpid()
         self.lprint("Connect to Redis on %s:%s DB=%s" % (self.host,self.port,self.db))
@@ -35,8 +46,6 @@ class DitchRedisHandler(object):
             self.redis = None
             self.isConnected = False
             return False
-        except Exception as e:
-            self.lprint("General exception thrown connecting to redis.")
 
         return True
 

@@ -3,8 +3,7 @@
 import argparse
 import time
 
-#from Ditch.ControllerCelery import DitchController
-from Ditch.Controller import DitchController
+from Ditch.ControllerCelery import DitchController
 
 def main():
     """
@@ -13,6 +12,8 @@ def main():
     enter a loop and keep calling the check function.
 
     """
+
+    print("Here")
 
     parser = argparse.ArgumentParser()
 

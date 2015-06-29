@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     s = '{"Sump": "653", "P": "0", "NC": "0", "STen": "0", "N": "0", "PC": "0", "S": "0", "ST": "0", "SC": "0", "Ditch": "765"}'
 
-    print("Calling task named %s" % onstatus.name)
+    print("Calling task named %s" % status.name)
 
     r = status.delay()
     stat = r.get(timeout=10)

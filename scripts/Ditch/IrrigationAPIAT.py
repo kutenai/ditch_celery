@@ -5,6 +5,12 @@ import time
 import re
 
 class IrrigationAPI(object):
+    """
+    Class to manage the hardware interface to the ditch controller.
+
+    The hardware interface is a serial interface.
+    Find the serial port, open it and manage the data to and from the port.
+    """
 
     def __init__(self):
         super(IrrigationAPI,self).__init__()
@@ -13,7 +19,6 @@ class IrrigationAPI(object):
         self.port = None
         self.printer = None
         self._initialized = False
-        print("Initialized IrrigationAPI!")
 
 
     def setPrintObj(self,pobj):
@@ -33,6 +38,7 @@ class IrrigationAPI(object):
         """
         try:
             if not self._initialized:
+                print("Opening the serial port.")
                 self.setupSerial(False)
                 self._initialized = True
                 print("Opened the serial channel.")

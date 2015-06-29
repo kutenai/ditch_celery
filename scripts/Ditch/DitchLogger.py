@@ -6,8 +6,6 @@ import json
 import time
 import httplib, urllib
 from IrrigationAPIAT import IrrigationAPI
-from DBConnection import DBConnection
-from DBDitch import DBDitch
 
 import plotly
 
@@ -114,9 +112,15 @@ class DitchLogger(object):
         """
         Initialize the DB Connection for logging
         """
-
-        self.conn = DBConnection()
-        self.dbTable = DBDitch(self.conn)
+        try:
+            from DBConnection import DBConnection
+            from DBDitch import DBDitch
+        except ImportError:
+            #print("No Database connection. Will not log to DB")
+            pass
+        else:
+            self.conn = DBConnection()
+            self.dbTable = DBDitch(self.conn)
 
 
     def ditchInches(self,reading):

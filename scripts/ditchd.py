@@ -1,5 +1,14 @@
 #!/usr/bin/env Python
 
+"""@package Ditch Server
+
+Spice Daemon for the Ditch server
+
+Launch the Ditch server as a daemon.
+
+
+"""
+
 import argparse
 import sys
 import os
@@ -14,9 +23,9 @@ class DitchDaemon(Daemon):
 
     def __init__(self,pidfile,stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         super(DitchDaemon,self).__init__(pidfile,stdin,stdout,stderr)
-        self.host = '127.0.0.1'
-        self.port = 6388
-        self.db = 0
+        self.host = 'gardenbuzz.com'
+        self.port = 6379
+        self.db = 5
         self.instanceid = None
 
 
@@ -58,7 +67,11 @@ class DitchDaemon(Daemon):
         # the GUI can control the manager.
         # The gui will update the # of workers upon startup.
 
-        app = DitchManager()
+        pid = os.getpid()
+
+        app = DitchManager(host='gardenbuzz.com',
+                           port=6379,
+                           db=5)
         app.setDaemon(True)
 
         logfile = self._logfile()

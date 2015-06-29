@@ -20,7 +20,7 @@ class DitchManager(DitchRedisHandler):
     Manage the ditch interface.
     Periodically read the levels and log them to the database, and to the COSM api
 
-    Look for control inforation in redis. Redis can be used to set the pump and ditch
+    Look for control information in redis. Redis can be used to set the pump and ditch
      control values, so, you can set the pump to 'on', and the north or south valves to
      'on', thus instructing the manager to send the appropriate commands.
 
@@ -379,12 +379,10 @@ class DitchManager(DitchRedisHandler):
             if st:
                 self.updateRedis(st)
 
-            bFast = False
-            for key in ['P','PC','N','NC','S','SC']:
-                if st[key] != '0':
-                    bFast = True
 
-            if bFast:
+            bRunning = self.isAnythingRunning(st)
+
+            if bRunning:
                 self.dbLogInterval = 5
                 self.cosmLogInterval = 10
             else:
@@ -392,6 +390,19 @@ class DitchManager(DitchRedisHandler):
                 self.cosmLogInterval = 60
         except:
             self.lprint("Exception updating status")
+
+    def isAnythingRunning(self, st):
+        """
+        Return true if any of the status values in the list
+        of status items is on - or non zero.
+        :param st:
+        :return:
+        """
+        for key in ['P','PC','N','NC','S','SC']:
+            if st[key] != '0':
+                return True
+
+        return False
 
 
     def updateRedis(self,status):
@@ -436,6 +447,11 @@ class DitchManager(DitchRedisHandler):
         self.lprint(txt)
 
     def lprint(self, txt):
+        """
+        Print message to stdout, and other log mechanisms.
+        :param txt:
+        :return:
+        """
 
         currTime = localtime()
         logTime = strftime("%Y%m%d %H:%M:%S", currTime)
