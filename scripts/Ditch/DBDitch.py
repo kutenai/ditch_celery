@@ -8,15 +8,14 @@ from time import strftime
 
 from DBConnection import *
 
-class DBDitch(DBConnUser):
 
-    def __init__(self,connection):
-        super(DBDitch,self).__init__(connection)
+class DBDitch(DBConnUser):
+    def __init__(self, connection):
+        super(DBDitch, self).__init__(connection)
 
         self.setTableNames()
 
     def setTableNames(self):
-
         self.ditchLog = "level_log"
 
     def clearLog(self):
@@ -27,8 +26,7 @@ class DBDitch(DBConnUser):
         curs.execute("delete from %s" % self.ditchLog)
         curs.execute("alter table %s AUTO_INCREMENT=1" % self.compTable)
 
-    def insertLogEntry(self,ditchlvl,sumplvl,ditchin, sumpin, pumpOn, northOn, southOn):
-
+    def insertLogEntry(self, ditchlvl, sumplvl, ditchin, sumpin, pumpOn, northOn, southOn):
         sql = """
             insert into %s
             (
@@ -46,13 +44,13 @@ class DBDitch(DBConnUser):
 
             """ % (self.ditchLog,
                    ditchlvl, sumplvl, ditchin, sumpin, pumpOn, northOn, southOn
-                )
+                   )
 
         curs = self.getCursor()
         curs.execute(sql)
         self.conn.commit()
 
-    def queryLastNReadings(self,N=1000):
+    def queryLastNReadings(self, N=1000):
         """
         Query the last N readings from teh DB
         """
@@ -72,8 +70,8 @@ class DBDitch(DBConnUser):
         readings = curs.fetchallDict()
         return readings
 
-def main():
 
+def main():
     # Left over.. could put some test code here.
     pass
 

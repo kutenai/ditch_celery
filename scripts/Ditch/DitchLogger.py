@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 __author__ = 'kutenai'
 
-
 import json
 import time
 import httplib, urllib
@@ -74,7 +73,7 @@ class DitchLogger(object):
 
     """
 
-    def __init__(self,api = None):
+    def __init__(self, api=None):
         self.hi = True
 
         if not api:
@@ -95,13 +94,13 @@ class DitchLogger(object):
 
         }
 
-        self.py = plotly.plotly(username_or_email='kutenai',key='xhhbxk2swl')
+        self.py = plotly.plotly(username_or_email='kutenai', key='xhhbxk2swl')
 
-    def setPrintObj(self,pobj):
+    def setPrintObj(self, pobj):
 
         self.printer = pobj
 
-    def lprint(self,txt):
+    def lprint(self, txt):
 
         if self.printer:
             self.printer.lprint(txt)
@@ -116,43 +115,42 @@ class DitchLogger(object):
             from DBConnection import DBConnection
             from DBDitch import DBDitch
         except ImportError:
-            #print("No Database connection. Will not log to DB")
+            # print("No Database connection. Will not log to DB")
             pass
         else:
             self.conn = DBConnection()
             self.dbTable = DBDitch(self.conn)
 
-
-    def ditchInches(self,reading):
+    def ditchInches(self, reading):
 
         m = 0.011974658
         intercept = 17.5
-        return intercept - m*int(reading)
+        return intercept - m * int(reading)
 
-    def sumpInches(self,reading):
+    def sumpInches(self, reading):
 
         m = 0.037290516
-        inches = m* int(reading)
+        inches = m * int(reading)
         return inches
 
-    def _logStream(self,feedid,id,val):
+    def _logStream(self, feedid, id, val):
         """
         Low-level log, no history
         """
 
         data = {
-            'id' : id,
-            "current_value" : val
+            'id': id,
+            "current_value": val
         }
 
         jsons = json.dumps(data)
-        headers = {"Content-type": "application/json",'X-ApiKey': self.apikey }
+        headers = {"Content-type": "application/json", 'X-ApiKey': self.apikey}
         conn = httplib.HTTPConnection("api.cosm.com")
-        conn.request("PUT", "/v2/feeds/%d/datastreams/%s" % (feedid,id), jsons, headers)
+        conn.request("PUT", "/v2/feeds/%d/datastreams/%s" % (feedid, id), jsons, headers)
         response = conn.getresponse()
 
         if response.status == 200:
-            self.lprint ("Logged To Feedid %d Stream %s => %s" % (feedid,id,val))
+            self.lprint("Logged To Feedid %d Stream %s => %s" % (feedid, id, val))
             return True
         else:
             self.lprint(response.status, response.reason)
@@ -162,7 +160,6 @@ class DitchLogger(object):
             conn.close()
 
         return False
-
 
     def logStream(self, feedid, id, val):
         """
@@ -175,13 +172,13 @@ class DitchLogger(object):
 
         if self.feedHist.has_key(id):
             fh = self.feedHist[id]
-            if fh['val'] == val: # No change
+            if fh['val'] == val:  # No change
                 return
             lastUpdateDuration = time.time() - fh['lastupdate']
         else:
             self.feedHist[id] = {
-                'val' : None,
-                'lastupdate' : None
+                'val': None,
+                'lastupdate': None
             }
             lastUpdateDuration = 0
 
@@ -195,8 +192,7 @@ class DitchLogger(object):
             fh['val'] = val
             fh['lastupdate'] = time.time()
 
-
-    def logBoolStream(self,feedid,id,bIn):
+    def logBoolStream(self, feedid, id, bIn):
         """
         Convert a boolean value to a 1 or a 0 and log the stream
         """
@@ -204,21 +200,20 @@ class DitchLogger(object):
         if bIn:
             bval = 1
 
-        self.logStream(feedid,id,bval)
+        self.logStream(feedid, id, bval)
 
-
-    def logResultsCosm(self,ditch,sump):
+    def logResultsCosm(self, ditch, sump):
         feedid = self.feedid
-        self.logStream(feedid,'ditch_level',self.ditchInches(ditch))
-        self.logStream(feedid,'sump_level', self.sumpInches(sump))
+        self.logStream(feedid, 'ditch_level', self.ditchInches(ditch))
+        self.logStream(feedid, 'sump_level', self.sumpInches(sump))
 
-    def logSystemStatus(self,pumpOn, northOn, southOn):
+    def logSystemStatus(self, pumpOn, northOn, southOn):
         feedid = self.feedid
         self.logBoolStream(feedid, 'pump_on', pumpOn)
         self.logBoolStream(feedid, 'north_on', northOn)
         self.logBoolStream(feedid, 'south_on', southOn)
 
-    def logResultsDB(self,ditch,sump, pump,north,south):
+    def logResultsDB(self, ditch, sump, pump, north, south):
         """
         Dump all information to the database.
         """
@@ -236,15 +231,13 @@ class DitchLogger(object):
 
             self.lprint("Logged to Database.")
 
-
     def logLevels(self):
         vals = self.api.getSensors()
 
         if vals:
-            self.logResults(vals['ditch'],vals['sump'])
+            self.logResults(vals['ditch'], vals['sump'])
 
-
-    def logSome(self,interval,count):
+    def logSome(self, interval, count):
         """
         Script is called once a minute.. so, log every 10 seconds
         5 times.
@@ -275,8 +268,7 @@ def main():
 
     lgr = DitchLogger()
 
-
-    lgr.logSome(10,5)
+    lgr.logSome(10, 5)
 
 
 if __name__ == "__main__":

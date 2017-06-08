@@ -21,12 +21,13 @@ from Ditch.IrrigationAPIAT import IrrigationAPI
 
 api = IrrigationAPI()
 
+
 @task()
 def status():
     logger.info("Getting system status..")
     stat = api.getSystemStatus()
     r = redis.StrictRedis(host='gardenbuzz.com', port=6379, db=3)
-    r.set('ditch_status',json.dumps(stat))
+    r.set('ditch_status', json.dumps(stat))
 
     return json.dumps(stat)
 
@@ -56,7 +57,3 @@ def north_enable(bEnable):
     logger.info("Set North Enable to %s" % bEnable)
     api.northEnable(bEnable)
     logger.info("Done")
-
-
-
-

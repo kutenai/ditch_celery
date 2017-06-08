@@ -1,18 +1,17 @@
-
 import os.path
 import os
 import socket
 import redis
 from redis.exceptions import (
     ConnectionError,
-    )
+)
 
 from time import time
 
-class DitchRedisHandler(object):
 
-    def __init__(self,host,port,db):
-        self.host= host
+class DitchRedisHandler(object):
+    def __init__(self, host, port, db):
+        self.host = host
         self.port = port
         self.db = db
         self.redis = None
@@ -33,7 +32,7 @@ class DitchRedisHandler(object):
         """
 
         self.myid = 'server:' + socket.gethostname() + ":%d" % os.getpid()
-        self.lprint("Connect to Redis on %s:%s DB=%s" % (self.host,self.port,self.db))
+        self.lprint("Connect to Redis on %s:%s DB=%s" % (self.host, self.port, self.db))
         self.redis = redis.StrictRedis(host=self.host, port=self.port, db=self.db)
 
         try:
@@ -52,60 +51,60 @@ class DitchRedisHandler(object):
     def redisDisconnect(self):
         # We are ending now.. deregister with redis
         self.hdel(self.myid)
-        self.srem('servers',self.myid)
+        self.srem('servers', self.myid)
         self.lprint("Deregistered from redis server.")
 
-    def hset(self,hash,key,value):
+    def hset(self, hash, key, value):
 
         try:
-            self.redis.hset(hash,key,value)
+            self.redis.hset(hash, key, value)
         except:
             # Failed.. perhaps redis is down?
             self.isConnected = False
             return False
         return True
 
-    def hget(self,hash,key):
+    def hget(self, hash, key):
 
         try:
-            return self.redis.hget(hash,key)
+            return self.redis.hget(hash, key)
         except:
             # Failed.. perhaps redis is down?
             self.isConnected = False
             return None
 
-    def hdel(self,key):
+    def hdel(self, key):
 
         try:
             self.redis.hdel(key)
         except:
             self.isConnected = False
 
-    def sadd(self,setname,value):
+    def sadd(self, setname, value):
 
         try:
-            self.redis.sadd(setname,value)
+            self.redis.sadd(setname, value)
         except:
             self.isConnected = False
 
-    def srem(self,setname,value):
+    def srem(self, setname, value):
 
         try:
-            self.redis.srem(setname,value)
+            self.redis.srem(setname, value)
         except:
             # Failed.. perhaps redis is down?
             self.isConnected = False
             return False
         return True
 
-    def lpush(self,listname,value):
+    def lpush(self, listname, value):
 
         try:
-            self.redis.lpush(listname,value)
+            self.redis.lpush(listname, value)
         except:
             self.isConnected = False
 
-    def rpop(self,listname):
+    def rpop(self, listname):
 
         try:
             return self.redis.rpop(listname)
@@ -113,19 +112,18 @@ class DitchRedisHandler(object):
             self.isConnected = False
         return None
 
-    def brpop(self,listname,timeout):
+    def brpop(self, listname, timeout):
 
         try:
-            return self.redis.brpop(listname,timeout)
+            return self.redis.brpop(listname, timeout)
         except:
             self.isConnected = False
             return None
 
-    def exists(self,key):
+    def exists(self, key):
 
         try:
             return self.redis.exists(key)
         except:
             self.isConnected = False
             return False
-

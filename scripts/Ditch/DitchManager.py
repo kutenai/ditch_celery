@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
 from threading import RLock
-import os,atexit
+import os, atexit
 
-from time import time,localtime,gmtime,strftime,sleep
+from time import time, localtime, gmtime, strftime, sleep
 import signal
 import sys
 import argparse
@@ -13,6 +13,7 @@ from .DitchRedisHandler import DitchRedisHandler
 from .IrrigationAPIAT import IrrigationAPI
 from .DitchLogger import DitchLogger
 from .DitchMessenger import DitchMessenger
+
 
 class DitchManager(DitchRedisHandler):
     """
@@ -27,7 +28,7 @@ class DitchManager(DitchRedisHandler):
     """
 
     def __init__(self, host='localhost', port=6388, db=0):
-        super(DitchManager,self).__init__(host,port,db)
+        super(DitchManager, self).__init__(host, port, db)
 
         self._debug = False
         self.resultBuffer = []
@@ -38,7 +39,6 @@ class DitchManager(DitchRedisHandler):
 
         # For logging to COSM
         self.apikey = "d8ytNTiS45sNRIVqsluvbDTlW2eSAKxJVUNVamJLUmtJZz0g"
-
 
         self.api = IrrigationAPI()
         self.api.setPrintObj(self)
@@ -64,36 +64,36 @@ class DitchManager(DitchRedisHandler):
         self.logfp = None
 
         self.systemStates = {
-            'pump' : 'off',
-            'north' : 'off',
-            'south' : 'off'
+            'pump': 'off',
+            'north': 'off',
+            'south': 'off'
         }
 
         self.currCommandValues = {
-            'pump' : False,
-            'north' : False,
-            'south' : False
+            'pump': False,
+            'north': False,
+            'south': False
         }
 
         self.alarms = {
-            'ditch' : {
-                'alarm' : 13.0,
-                'warm' : 12.5,
-                'normal' : 12.0,
-                'alarmStarted' : None,
-                'lastMsgSent' : None,
-                'alarmed' : False
+            'ditch': {
+                'alarm': 13.0,
+                'warm': 12.5,
+                'normal': 12.0,
+                'alarmStarted': None,
+                'lastMsgSent': None,
+                'alarmed': False
             }
         }
 
         self.logIntervals = {
-            'on' : {
-                'cosm' : 10,
-                'db' : 5
+            'on': {
+                'cosm': 10,
+                'db': 5
             },
-            'off' : {
-                'cosm' : 60,
-                'db'   : 60
+            'off': {
+                'cosm': 60,
+                'db': 60
             }
         }
 
@@ -102,25 +102,25 @@ class DitchManager(DitchRedisHandler):
         self.lastCosmLogTime = time() - 100
         self.lastDBLogTime = time() - 100
 
-        def signal_handler(signal,frame):
+        def signal_handler(signal, frame):
             print("Keyboard interrupt!.")
             self.enRun = False
             sleep(1)
             sys.exit(0)
 
-        def onterm(signal,frame):
+        def onterm(signal, frame):
             self.logprint("Termination received.")
             self.enRun = False
             self.logprint("Shutdown complete..")
 
-        def onGracefulStop(signal,frame):
+        def onGracefulStop(signal, frame):
             self.enDequeue = False
             self.logprint("Graceful stop received. Initiating shutdown..")
             # Wait for the run flag to be cleared
 
-        signal.signal(signal.SIGINT,signal_handler)
-        signal.signal(signal.SIGTERM,onterm)
-        signal.signal(signal.SIGUSR1,onGracefulStop)
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, onterm)
+        signal.signal(signal.SIGUSR1, onGracefulStop)
 
     def start(self):
         """
@@ -140,20 +140,20 @@ class DitchManager(DitchRedisHandler):
             self.start()
             atexit.register(self.shutdown)
 
-        self.redisConnect() # attempt to connect
+        self.redisConnect()  # attempt to connect
         self.initRedisValues()
 
         self.logprint("Starting Ditch Manager %s." % (self.myid))
 
         self.lastStatusUpdate = time()
-        self.statusUpdateRate = 5 # Every 5 seconds.
+        self.statusUpdateRate = 5  # Every 5 seconds.
 
         while self.enRun:
             try:
                 if not self.isConnected:
-                    sleep(5) # Retry at 5 second intervals
+                    sleep(5)  # Retry at 5 second intervals
                     self.redisConnect()
-                    continue # Jump back to the top while loop
+                    continue  # Jump back to the top while loop
 
                 self.checkCommandValues()
 
@@ -170,14 +170,13 @@ class DitchManager(DitchRedisHandler):
 
             sleep(0.5)
 
-
         self.redisDisconnect()
 
     def getSystemValue(self, key, default):
         val = self.redis.get(key)
         if val == None:
             val = default
-            self.lprint("Set %s to default of %s" % (key,default))
+            self.lprint("Set %s to default of %s" % (key, default))
             self.redis.set(key, val)
 
         return val
@@ -188,18 +187,17 @@ class DitchManager(DitchRedisHandler):
         and store our copies if they do.
         """
 
-        pRequest = self.getSystemValue('pumprequest','0')
-        nRequest= self.getSystemValue('northrequest','0')
-        sRequest= self.getSystemValue('southrequest','0')
+        pRequest = self.getSystemValue('pumprequest', '0')
+        nRequest = self.getSystemValue('northrequest', '0')
+        sRequest = self.getSystemValue('southrequest', '0')
 
         self.currCommandValues['pump'] = pRequest != '0'
-        self.currCommandValues['north'] = nRequest  != '0'
-        self.currCommandValues['south'] = sRequest  != '0'
+        self.currCommandValues['north'] = nRequest != '0'
+        self.currCommandValues['south'] = sRequest != '0'
 
-        for key in ['pump','north','south']:
-            self.api.sendBool(key,self.currCommandValues[key])
-            self.lprint("%s set to %s" % (key,self.currCommandValues[key]))
-
+        for key in ['pump', 'north', 'south']:
+            self.api.sendBool(key, self.currCommandValues[key])
+            self.lprint("%s set to %s" % (key, self.currCommandValues[key]))
 
     def checkCommandValues(self):
         """
@@ -210,26 +208,26 @@ class DitchManager(DitchRedisHandler):
         """
 
         pRequest = self.redis.get('pumprequest')
-        nRequest= self.redis.get('northrequest')
-        sRequest= self.redis.get('southrequest')
+        nRequest = self.redis.get('northrequest')
+        sRequest = self.redis.get('southrequest')
 
         cmds = {
-            'pump'  : pRequest != '0',
-            'north' : nRequest != '0',
-            'south' : sRequest != '0'
+            'pump': pRequest != '0',
+            'north': nRequest != '0',
+            'south': sRequest != '0'
         }
 
         bUpdateStatus = False
         for key in cmds.iterkeys():
             if cmds[key] != self.currCommandValues[key]:
                 try:
-                    self.api.sendBool(key,cmds[key])
-                    self.lprint("%s set to %s" % (key,cmds[key]))
+                    self.api.sendBool(key, cmds[key])
+                    self.lprint("%s set to %s" % (key, cmds[key]))
                     self.currCommandValues[key] = cmds[key]
                     bUpdateStatus = True
 
                 except Exception as e:
-                    self.lprint("Exception trying to set the command value %s to %s." % (key,cmds[key]))
+                    self.lprint("Exception trying to set the command value %s to %s." % (key, cmds[key]))
 
         if bUpdateStatus:
             self.updateStatus()
@@ -254,13 +252,12 @@ class DitchManager(DitchRedisHandler):
 
             if cosmDiff > self.cosmLogInterval:
                 self.lastCosmLogTime = time()
-                self.loggr.logResultsCosm(ditch,sump)
+                self.loggr.logResultsCosm(ditch, sump)
             if dbDiff > self.dbLogInterval:
                 self.lastDBLogTime = time()
-                self.loggr.logResultsDB(ditch,sump,pump,north,south)
+                self.loggr.logResultsDB(ditch, sump, pump, north, south)
 
-
-    def inAlarmState(self,ditchInches):
+    def inAlarmState(self, ditchInches):
         """
         Provide some hysteresis for the alarm.
         If we are not in an alarmed state, and the level goes above the alarm level,
@@ -282,8 +279,7 @@ class DitchManager(DitchRedisHandler):
 
         return False
 
-
-    def alarmChecks(self,ditchInches):
+    def alarmChecks(self, ditchInches):
         """
         Check for alarm levels.
 
@@ -305,8 +301,8 @@ class DitchManager(DitchRedisHandler):
                 a['lastMsgSent'] = tnow
             else:
                 # Already alarmed, should we send a reminder?
-                if (tnow - a['lastMsgSent'] > 30*60): # 30 minutes
-                    alarmLength = int(tnow - a['alarmStarted'])/60
+                if (tnow - a['lastMsgSent'] > 30 * 60):  # 30 minutes
+                    alarmLength = int(tnow - a['alarmStarted']) / 60
                     # First time we detected an alarm
                     self.sendAlarmMessage(ditchInches, a['alarmStarted'], tnow, alarmLength)
                     a['alarmed'] = True
@@ -314,14 +310,13 @@ class DitchManager(DitchRedisHandler):
         else:
             if a['alarmed']:
                 # If we are in an alarmed state, then send a 'all clear' message
-                alarmLength = int(tnow - a['alarmStarted'])/60
+                alarmLength = int(tnow - a['alarmStarted']) / 60
                 self.sendAlarmClearMessage(ditchInches, a['alarmStarted'], tnow, alarmLength)
                 a['alarmed'] = False
                 a['alarmStarted'] = None
                 a['lastMsgSent'] = None
 
-
-    def sendAlarmMessage(self,ditchInches, alarmStart, tnow, alarmLength):
+    def sendAlarmMessage(self, ditchInches, alarmStart, tnow, alarmLength):
         """
         Send an alarm message
         """
@@ -337,13 +332,13 @@ class DitchManager(DitchRedisHandler):
     for %d minutes.
 
             """ % (ditchInches,
-                   strftime("%A, %H:%M",localtime(alarmStart)),
-                   strftime("%A, %H:%M",localtime(tnow)),
+                   strftime("%A, %H:%M", localtime(alarmStart)),
+                   strftime("%A, %H:%M", localtime(tnow)),
                    int(alarmLength))
 
-        self.messenger.sendMessage('alarm',subject, msg)
+        self.messenger.sendMessage('alarm', subject, msg)
 
-    def sendAlarmClearMessage(self,ditchInches, alarmStart, tnow, alarmLength):
+    def sendAlarmClearMessage(self, ditchInches, alarmStart, tnow, alarmLength):
         """
         Send an alarm cleared message
         """
@@ -359,11 +354,11 @@ class DitchManager(DitchRedisHandler):
     for %d minutes.
 
             """ % (ditchInches,
-                   strftime("%A, %H:%M",localtime(alarmStart)),
-                   strftime("%A, %H:%M",localtime(tnow)),
+                   strftime("%A, %H:%M", localtime(alarmStart)),
+                   strftime("%A, %H:%M", localtime(tnow)),
                    int(alarmLength))
 
-        self.messenger.sendMessage('alarm',subject, msg)
+        self.messenger.sendMessage('alarm', subject, msg)
 
     def updateStatus(self):
         """
@@ -373,12 +368,11 @@ class DitchManager(DitchRedisHandler):
         Update the log intervals to be slow if nothing is on.
         """
 
-        try :
+        try:
             st = self.api.getSystemStatus()
 
             if st:
                 self.updateRedis(st)
-
 
             bRunning = self.isAnythingRunning(st)
 
@@ -398,29 +392,28 @@ class DitchManager(DitchRedisHandler):
         :param st:
         :return:
         """
-        for key in ['P','PC','N','NC','S','SC']:
+        for key in ['P', 'PC', 'N', 'NC', 'S', 'SC']:
             if st[key] != '0':
                 return True
 
         return False
 
-
-    def updateRedis(self,status):
+    def updateRedis(self, status):
         """
         Use the given status structure and upate all of the redis variables with
         the current values.
         """
 
-        self.redis.set('pumpcall',status['PC'])
-        self.redis.set('pumpon',status['P'])
-        self.redis.set('northcall',status['NC'])
-        self.redis.set('northon',status['N'])
-        self.redis.set('southcall',status['SC'])
-        self.redis.set('southon',status['S'])
-        self.redis.set('ditch',status['Ditch'])
-        self.redis.set('sump',status['Sump'])
-        self.redis.set('ditch_inches',self.loggr.ditchInches(status['Ditch']))
-        self.redis.set('sump_inches',self.loggr.sumpInches(status['Sump']))
+        self.redis.set('pumpcall', status['PC'])
+        self.redis.set('pumpon', status['P'])
+        self.redis.set('northcall', status['NC'])
+        self.redis.set('northon', status['N'])
+        self.redis.set('southcall', status['SC'])
+        self.redis.set('southon', status['S'])
+        self.redis.set('ditch', status['Ditch'])
+        self.redis.set('sump', status['Sump'])
+        self.redis.set('ditch_inches', self.loggr.ditchInches(status['Ditch']))
+        self.redis.set('sump_inches', self.loggr.sumpInches(status['Sump']))
 
         try:
             self.loggr.logSystemStatus(status['P'] != '0',
@@ -430,18 +423,17 @@ class DitchManager(DitchRedisHandler):
         except:
             pass
 
-
     def logRunningTime(self):
         startTime = time.strftime("%a, %d %b %Y %H:%M:%S -0007", self.startTime)
         currTime = time.gmtime()
         totalJobs = self.mgr.getJobCount()
         self.logprint('Spice Server running since ' + startTime + ". Total Jobs:%d" % totalJobs)
 
-    def setLogFile(self,fname):
+    def setLogFile(self, fname):
         self.logfile = fname
-        self.logfp = open(self.logfile,'w')
+        self.logfp = open(self.logfile, 'w')
 
-    def logprint(self,txt):
+    def logprint(self, txt):
 
         self.processLogMessages()
         self.lprint(txt)
@@ -482,7 +474,7 @@ class DitchManager(DitchRedisHandler):
         self.logprint("Received the shutdown signal!")
         self.enRun = False
 
-    def setDaemon(self,bEnable):
+    def setDaemon(self, bEnable):
         """
         Enable the isDaemon flag.
         """
@@ -492,11 +484,10 @@ class DitchManager(DitchRedisHandler):
     def getDebug(self):
         return self._debug
 
-    def setDebug(self,db):
+    def setDebug(self, db):
         self._debug = db
 
-    debug = property(getDebug,setDebug)
-
+    debug = property(getDebug, setDebug)
 
     def processLogMessages(self):
         """
@@ -514,9 +505,7 @@ class DitchManager(DitchRedisHandler):
 
         if self.txtChanged:
             self.txtChanged = False
-            self.lprint("Msg:"+self.txt)
+            self.lprint("Msg:" + self.txt)
             self.txt = ""
 
         self.msglock.release()
-
-

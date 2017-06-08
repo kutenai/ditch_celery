@@ -4,6 +4,7 @@ import glob
 import time
 import re
 
+
 class IrrigationAPI(object):
     """
     Class to manage the hardware interface to the ditch controller.
@@ -13,19 +14,18 @@ class IrrigationAPI(object):
     """
 
     def __init__(self):
-        super(IrrigationAPI,self).__init__()
+        super(IrrigationAPI, self).__init__()
         self.ser = None
         self.lastResult = None
         self.port = None
         self.printer = None
         self._initialized = False
 
-
-    def setPrintObj(self,pobj):
+    def setPrintObj(self, pobj):
 
         self.printer = pobj
 
-    def lprint(self,txt):
+    def lprint(self, txt):
 
         if self.printer:
             self.printer.lprint(txt)
@@ -45,8 +45,7 @@ class IrrigationAPI(object):
         except Exception as e:
             raise Exception("Could not open serial port! Exception:%s" % e)
 
-
-    def setupSerial(self,bFast = False):
+    def setupSerial(self, bFast=False):
         """
         Determine the serial port, then open that port with the default
         baud rate.
@@ -64,12 +63,12 @@ class IrrigationAPI(object):
             self.lprint("Closed existing port.")
             self.ser.close()
             self.ser = None
-            self.ser = serial.Serial(self.port,self.baudrate,timeout = 1)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
             self.ser.open()
-            self.lprint ("Re-opened port at different baud rate")
+            self.lprint("Re-opened port at different baud rate")
 
         else:
-            self.ser = serial.Serial(self.port,self.baudrate, timeout = 1)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
             self.open()
             self.lprint("Opened port %s" % self.port)
 
@@ -80,7 +79,6 @@ class IrrigationAPI(object):
         self.ser.close()
         self._initialized = False
 
-
     def open(self):
         """
         Open the serial connection
@@ -89,14 +87,13 @@ class IrrigationAPI(object):
         if not self.ser.isOpen():
             self.ser.open()
 
-
-    def setLastResult(self,res):
+    def setLastResult(self, res):
         self.lastResult = res
 
     def getLastResult(self):
         return self.lastResult
 
-    def sendPacket(self,packet):
+    def sendPacket(self, packet):
         """
         Send a packet of data.
         Append a newline if not already present.
@@ -127,7 +124,7 @@ class IrrigationAPI(object):
                 retval = retval.decode()
                 m = re.search("(Ok|Fail):?(.*)", retval, re.IGNORECASE)
                 if m:
-                    #print("{0} Result:{1}".format(packet.decode(),retval))
+                    # print("{0} Result:{1}".format(packet.decode(),retval))
                     pf = m.group(1)
                     res = m.group(2)
                     self.setLastResult(res)
@@ -138,7 +135,7 @@ class IrrigationAPI(object):
 
         return False
 
-    def getSystemStatus(self,retries=10):
+    def getSystemStatus(self, retries=10):
         """
         Request the status of the system. Returns a string with
         information about each item
@@ -165,11 +162,11 @@ class IrrigationAPI(object):
                     continue
                 return data
             retries -= 1
-            #print("Retries..")
+            # print("Retries..")
 
         return None
 
-    def getSensors(self,retries=10):
+    def getSensors(self, retries=10):
         """
         Request the status of the sensors.
 
@@ -180,17 +177,17 @@ class IrrigationAPI(object):
 
         while retries:
             if self.sendPacket(b'levels'):
-                result = re.split("\s",self.getLastResult())
+                result = re.split("\s", self.getLastResult())
                 data = {
-                    'ditch' : result[0],
-                    'sump' : result[1]
+                    'ditch': result[0],
+                    'sump': result[1]
                 }
                 return data
             retries -= 1
 
         return None
 
-    def sendBool(self,cmd,bOn):
+    def sendBool(self, cmd, bOn):
         """
         Re-usable function that sends a boolean value as a 1 or a 0.
 
@@ -204,32 +201,31 @@ class IrrigationAPI(object):
             self.sendPacket('%s 0' % cmd)
             self.lprint("Set %s to off" % cmd)
 
-    def pumpEnable(self,bEnable):
+    def pumpEnable(self, bEnable):
         """
         Send the pump enable signal. Can be true or false to enable or disable the pump.
 
         """
-        self.sendBool('pump',bEnable)
+        self.sendBool('pump', bEnable)
 
-    def getStatus(self,cmd):
+    def getStatus(self, cmd):
         """
         Return the status of the specified command.
         Valid commands are pump, north or south.
         """
 
         data = {
-            'call' : -1,
-            'actual' : -1
+            'call': -1,
+            'actual': -1
         }
 
-        if cmd in ['pump','north','south']:
+        if cmd in ['pump', 'north', 'south']:
             if self.sendPacket(b'%s?' % cmd):
-                result = re.split("\s",self.getLastResult())
+                result = re.split("\s", self.getLastResult())
                 data['call'] = result[0]
-                data['actual']= result[1]
+                data['actual'] = result[1]
 
         return data
-
 
     def isPumpOn(self):
         return self.getStatus('pump')['actual'] == '1'
@@ -249,16 +245,16 @@ class IrrigationAPI(object):
     def getSouthStatus(self):
         return self.getStatus('south')
 
-    def northEnable(self,bEnable):
-        self.sendBool('north',bEnable)
+    def northEnable(self, bEnable):
+        self.sendBool('north', bEnable)
 
-    def southEnable(self,bEnable):
-        self.sendBool('south',bEnable)
+    def southEnable(self, bEnable):
+        self.sendBool('south', bEnable)
 
-    def sumpTriggerEnable(self,bEnable):
-        self.sendBool('sump_trig_en',bEnable)
+    def sumpTriggerEnable(self, bEnable):
+        self.sendBool('sump_trig_en', bEnable)
 
-    def sumpTriggerLevel(self,lvl):
+    def sumpTriggerLevel(self, lvl):
         self.sendPacket('sump_trigger %d' % lvl)
 
     def getPorts(self):
@@ -267,27 +263,25 @@ class IrrigationAPI(object):
             ports = glob.glob('/dev/tty.usbserial-A600*')
             return ports[0]
         elif platform.system() == 'Windows':
-            return "COM10" # No super good way to determine this..
+            return "COM10"  # No super good way to determine this..
 
 
 def main():
-
     api = IrrigationAPI()
 
     stat = api.getSystemStatus()
     if stat:
         print ("System Status:")
-        for key,val in stat.iteritems():
-            print ("%s => %s" % (key,val))
+        for key, val in stat.iteritems():
+            print ("%s => %s" % (key, val))
 
     sensors = api.getSensors()
     if sensors:
         print ("Sensor Levels:")
-        for key,val in sensors.iteritems():
-            print ("%s => %s" % (key,val))
+        for key, val in sensors.iteritems():
+            print ("%s => %s" % (key, val))
     else:
         print("No Sensor levels returned")
-
 
     print("Pump Call:" + api.getPumpStatus()['call'])
     api.pumpEnable(True)
@@ -306,6 +300,7 @@ def main():
     print("South Call:" + api.getSouthStatus()['call'])
     api.southEnable(False)
     print("South Call:" + api.getSouthStatus()['call'])
+
 
 if __name__ == '__main__':
     main()

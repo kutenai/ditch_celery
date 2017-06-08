@@ -7,8 +7,9 @@ from celery.utils.log import get_task_logger
 
 logger = get_task_logger('ditch')
 
-from celery import task,shared_task,chain
+from celery import task, shared_task, chain
 from ditchtasks.tasks import status
+
 
 @shared_task()
 def update_database():
@@ -28,5 +29,4 @@ def onstatus(d):
     secs = time.mktime(time.localtime())
     logger.info("asctime(localtime(secs)): %s" % time.asctime(time.localtime(secs)))
 
-    return {"Status" : "Success"}
-
+    return {"Status": "Success"}

@@ -2,25 +2,24 @@ import platform
 import glob
 import time
 import re
-from xbee import ZigBee,python2to3
+from xbee import ZigBee, python2to3
 import serial
 
+
 class ZBCommand(object):
-
-    def __init__(self,cmd,param):
-
+    def __init__(self, cmd, param):
         self.cmd = cmd
         self.param = param
 
-class DitchDummy(object):
 
+class DitchDummy(object):
     devices = {
         "coord": '\x00\x13\xa2\x00\x40\x9e\x0e\x94',
         "ditch": '\x00\x13\xa2\x00\x40\x9e\x0e\xa4'
     }
 
-    def __init__(self, async = False):
-        super(DitchDummy,self).__init__()
+    def __init__(self, async=False):
+        super(DitchDummy, self).__init__()
         self.ser = None
         self.xbee = None
         self.frameid = 1
@@ -32,7 +31,7 @@ class DitchDummy(object):
         except:
             raise "Could not open serial port!"
 
-        #self.setupConnection()
+            # self.setupConnection()
 
     def __delete__(self):
 
@@ -41,10 +40,10 @@ class DitchDummy(object):
     def nextFrameid(self):
 
         self.frameid = (self.frameid + 1) % 255
-        #return python2to3.intToByte(self.frameid)
+        # return python2to3.intToByte(self.frameid)
         return '3'
 
-    def setupSerial(self,bFast = False):
+    def setupSerial(self, bFast=False):
 
         if bFast:
             self.baudrate = 115200
@@ -59,11 +58,11 @@ class DitchDummy(object):
             print("Closed existing port.")
             self.ser.close()
             self.ser = None
-            self.ser = serial.Serial(port, self.baudrate,timeout = 1)
+            self.ser = serial.Serial(port, self.baudrate, timeout=1)
             print ("Re-opened port at different baud rate")
             self.initHardware()
         else:
-            self.ser = serial.Serial(port, self.baudrate, timeout = 1)
+            self.ser = serial.Serial(port, self.baudrate, timeout=1)
             self.ser.open()
             print("Opened port %s" % port)
 
@@ -72,8 +71,7 @@ class DitchDummy(object):
             else:
                 self.xbee = ZigBee(self.ser)
 
-
-    def onData(self,data):
+    def onData(self, data):
 
         print ("Got some data:")
         self.dataBuffer.append(data)
@@ -81,8 +79,8 @@ class DitchDummy(object):
     def sendDitchStatus(self):
         self.xbee.tx(dest_addr_long=DitchDummy.devices['coord'],
                      dest_addr='\xFF\xFF',
-                            data="ThisIsATest",
-                            frame_id=self.nextFrameid())
+                     data="ThisIsATest",
+                     frame_id=self.nextFrameid())
 
     def readData(self):
 
@@ -95,7 +93,8 @@ class DitchDummy(object):
             ports = glob.glob('/dev/tty.usbserial-A6007W*')
             return ports[0]
         elif platform.system() == 'Windows':
-            return "COM10" # No super good way to determine this..
+            return "COM10"  # No super good way to determine this..
+
 
 def waitkey():
     while True:
@@ -105,9 +104,7 @@ def waitkey():
             break
 
 
-
 def main():
-
     api = DitchDummy(True)
     api.sendDitchStatus()
     while True:
@@ -116,6 +113,7 @@ def main():
         except KeyboardInterrupt:
             break
         api.sendDitchStatus()
+
 
 if __name__ == '__main__':
     main()

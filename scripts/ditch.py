@@ -3,8 +3,9 @@
 import argparse
 import time
 
-#from Ditch.ControllerCelery import DitchController
+# from Ditch.ControllerCelery import DitchController
 from Ditch.Controller import DitchController
+
 
 def main():
     """
@@ -24,9 +25,9 @@ def main():
 
     parser.add_argument('--off', '-o', action="store_true", help="Turn all off.")
 
-    parser.add_argument('--north','-n', help="Turn the north valve on or off")
+    parser.add_argument('--north', '-n', help="Turn the north valve on or off")
 
-    parser.add_argument('--south', '-s',help="Turn the south valve on or off")
+    parser.add_argument('--south', '-s', help="Turn the south valve on or off")
 
     parser.add_argument('--status', '-t', action='store_true', help="Read the status")
 
@@ -38,7 +39,7 @@ def main():
 
     ctrl = DitchController()
 
-    bStatus = False # Read if any of the controls are set
+    bStatus = False  # Read if any of the controls are set
 
     if args.runnorth:
         ctrl.runNorth()

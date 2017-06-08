@@ -4,10 +4,10 @@ import glob
 import time
 import re
 
-class IrrigationAPI(object):
 
+class IrrigationAPI(object):
     def __init__(self):
-        super(IrrigationAPI,self).__init__()
+        super(IrrigationAPI, self).__init__()
         self.ser = None
         try:
             self.setupSerial(False)
@@ -16,7 +16,7 @@ class IrrigationAPI(object):
 
         self.setupConnection()
 
-    def setupSerial(self,bFast = False):
+    def setupSerial(self, bFast=False):
 
         if bFast:
             self.baudrate = 115200
@@ -31,11 +31,11 @@ class IrrigationAPI(object):
             print("Closed existing port.")
             self.ser.close()
             self.ser = None
-            self.ser = serial.Serial(port,self.baudrate,timeout = 1)
+            self.ser = serial.Serial(port, self.baudrate, timeout=1)
             print ("Re-opened port at different baud rate")
             self.initHardware()
         else:
-            self.ser = serial.Serial(port,self.baudrate, timeout = 1)
+            self.ser = serial.Serial(port, self.baudrate, timeout=1)
             if not self.ser.isOpen():
                 self.ser.open()
             print("Opened port %s" % port)
@@ -58,7 +58,7 @@ class IrrigationAPI(object):
 
         self.atCommands(['ATDN DITCH'])
 
-    def atCommands(self,cmds):
+    def atCommands(self, cmds):
         """
         Enter Command mode with +++
         Send each of the commands in turn, waiting for an 'Ok' response
@@ -73,16 +73,14 @@ class IrrigationAPI(object):
 
         cmds.append('ATCN')
         for cmd in cmds:
-            self.ser.write(cmd+'\r')
+            self.ser.write(cmd + '\r')
             retval = self.ser.readline()
             if (retval != 'OK\r'):
                 print("Failed sending command %s" % cmd)
             else:
                 print ("Send command %s" % cmd)
 
-
-
-    def sendPacket(self,packet):
+    def sendPacket(self, packet):
         self.ser.write(packet)
 
         retval = ""
@@ -96,14 +94,14 @@ class IrrigationAPI(object):
             try:
                 tdiff = time.time() - t
                 if tdiff > self.ser.timeout:
-                    #print("Timeout probably occurred:%f" % tdiff)
+                    # print("Timeout probably occurred:%f" % tdiff)
                     self.ser.write(packet)
                     continue
 
                 retval = retval.decode()
-                m = re.search("(\d+),(.*);",retval,re.IGNORECASE)
+                m = re.search("(\d+),(.*);", retval, re.IGNORECASE)
                 if m:
-                    #print("{0} Result:{1}".format(packet.decode(),retval))
+                    # print("{0} Result:{1}".format(packet.decode(),retval))
                     return retval
             except:
                 # Invalid format, cannot decode it..
@@ -124,32 +122,33 @@ class IrrigationAPI(object):
 
         self.ser.timeout = 0.1
 
-    def getSystemStatus(self,retries=10):
+    def getSystemStatus(self, retries=10):
 
         # Expected response example:
         # D:530 S:529 PC:1 P:1 NC:0 N:0 SC0: S:0 ST:0 STen:0;
         while retries:
             retval = self.sendPacket(b'7;\n')
             if retval:
-                m = re.search("1,\s*(.*)\s*;\s*",retval)
+                m = re.search("1,\s*(.*)\s*;\s*", retval)
                 if m:
                     status = m.group(1)
-                    pairs = re.split("\s+",status)
+                    pairs = re.split("\s+", status)
                     data = {}
                     for pair in pairs:
-                        key,val = re.split(":",pair)
+                        key, val = re.split(":", pair)
                         data[key] = val
 
                     return data
             retries -= 1
 
         return None
-    def getSensorData(self,retries=10):
+
+    def getSensorData(self, retries=10):
 
         while retries:
             retval = self.sendPacket(b'7;\n')
             if retval:
-                m = re.search("(\d+),(\d+),(\d+);",retval)
+                m = re.search("(\d+),(\d+),(\d+);", retval)
                 if m:
                     dt = m.group(1)
                     sensor1 = int(m.group(2))
@@ -164,21 +163,21 @@ class IrrigationAPI(object):
                     return data
             retries -= 1
 
-    def pumpEnable(self,bEnable):
+    def pumpEnable(self, bEnable):
 
         if bEnable:
             self.sendPacket('4,on;\n')
         else:
             self.sendPacket('4,off;\n')
 
-    def northZoneEnable(self,bEnable):
+    def northZoneEnable(self, bEnable):
 
         if bEnable:
             self.sendPacket('6,on;\n')
         else:
             self.sendPacket('6,off;\n')
 
-    def southZoneEnable(self,bEnable):
+    def southZoneEnable(self, bEnable):
 
         if bEnable:
             self.sendPacket('5,on;\n')
@@ -191,17 +190,15 @@ class IrrigationAPI(object):
             ports = glob.glob('/dev/tty.usbserial-A600*')
             return ports[0]
         elif platform.system() == 'Windows':
-            return "COM10" # No super good way to determine this..
+            return "COM10"  # No super good way to determine this..
 
 
 def main():
-
     api = IrrigationAPI()
     d = api.getSensorData()
 
     if d:
         print ("Data is " + d)
-
 
 
 if __name__ == '__main__':

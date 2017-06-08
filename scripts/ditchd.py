@@ -14,31 +14,30 @@ import sys
 import os
 import time
 
-from signal import SIGTERM,SIGUSR1
+from signal import SIGTERM, SIGUSR1
 from Ditch.DitchManager import DitchManager
 
 from daemon import Daemon
 
-class DitchDaemon(Daemon):
 
-    def __init__(self,pidfile,stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-        super(DitchDaemon,self).__init__(pidfile,stdin,stdout,stderr)
+class DitchDaemon(Daemon):
+    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+        super(DitchDaemon, self).__init__(pidfile, stdin, stdout, stderr)
         self.host = 'gardenbuzz.com'
         self.port = 6379
         self.db = 5
         self.instanceid = None
 
-
-    def setHost(self,host):
+    def setHost(self, host):
         self.host = host
 
-    def setPort(self,port):
+    def setPort(self, port):
         self.port = port
 
-    def setDB(self,db):
+    def setDB(self, db):
         self.db = db
 
-    def setInstanceId(self,id):
+    def setInstanceId(self, id):
         self.instanceid = id
 
     def _logfile(self):
@@ -53,12 +52,11 @@ class DitchDaemon(Daemon):
 
         if self.instanceid:
             pid = os.getpid()
-            logfile = os.path.join(logroot,"ditchd_%d.log" % pid)
+            logfile = os.path.join(logroot, "ditchd_%d.log" % pid)
         else:
-            logfile = os.path.join(logroot,"ditchd.log")
+            logfile = os.path.join(logroot, "ditchd.log")
 
         return logfile
-
 
     def run(self):
 
@@ -82,7 +80,7 @@ class DitchDaemon(Daemon):
         # Not sure what this will do.. but, should probably do something.
         app.shutdown()
 
-    def stop(self,graceful=False):
+    def stop(self, graceful=False):
         """
           Stop the daemon
           """
@@ -99,7 +97,7 @@ class DitchDaemon(Daemon):
             if not pid:
                 message = "pidfile %s does not exist. Daemon not running?\n"
                 sys.stderr.write(message % self.pidfile)
-                return # not an error in a restart
+                return  # not an error in a restart
 
             # Try killing the daemon process
             try:
@@ -115,7 +113,7 @@ class DitchDaemon(Daemon):
                     print str(err)
                     sys.exit(1)
         else:
-            super(DitchDaemon,self).stop()
+            super(DitchDaemon, self).stop()
 
 
 if __name__ == "__main__":
@@ -126,24 +124,24 @@ if __name__ == "__main__":
 
     parser.add_argument("--host")
 
-    parser.add_argument("--graceful",'-g', action="store_true")
+    parser.add_argument("--graceful", '-g', action="store_true")
 
-    parser.add_argument("--port",type=int,default=6379)
+    parser.add_argument("--port", type=int, default=6379)
 
-    parser.add_argument("--db",type=int,default=0)
+    parser.add_argument("--db", type=int, default=0)
 
     parser.add_argument("command",
-        choices = ['start','stop','restart','status'],
-        help="Enter the command to pass to the spice daemon.")
+                        choices=['start', 'stop', 'restart', 'status'],
+                        help="Enter the command to pass to the spice daemon.")
 
     args = parser.parse_args()
 
-    if os.path.exists("/var/run") and os.access("/var/run",os.W_OK):
+    if os.path.exists("/var/run") and os.access("/var/run", os.W_OK):
         piddir = "/var/run"
     else:
         piddir = "/tmp"
 
-    pidfile = os.path.join(piddir,"ditchd.pid")
+    pidfile = os.path.join(piddir, "ditchd.pid")
     daemon = DitchDaemon(pidfile)
 
     if args.host:

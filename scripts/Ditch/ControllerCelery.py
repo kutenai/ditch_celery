@@ -3,9 +3,10 @@
 import sys
 import json
 
-from celery import Celery,group,chain
+from celery import Celery, group, chain
 
 from ditchtasks.tasks import pump_enable, south_enable, north_enable, status
+
 
 class DitchController(object):
     """
@@ -43,7 +44,6 @@ class DitchController(object):
             pump_enable(True)
         )()
 
-
     def runSouth(self):
         print("Turning on South Zone.")
         chain(
@@ -52,41 +52,32 @@ class DitchController(object):
             pump_enable(True)
         )()
 
-
     def southEnable(self, bOn):
         south_enable.delay(bOn).get(timeout=self.timeout)
-
 
     def pumpEnable(self, bOn):
         pump_enable.delay(bOn).get(timeout=self.timeout)
 
-
     def northEnable(self, bOn):
         north_enable.delay(bOn).get(timeout=self.timeout)
 
-
     def isPumpOn(self):
-        #return self.redis.get('pumpon') != '0'
+        # return self.redis.get('pumpon') != '0'
         return False
-
 
     def isNorthOn(self):
-        #return self.redis.get('northon') != '0'
+        # return self.redis.get('northon') != '0'
         return False
-
 
     def isSouthOn(self):
-        #return self.redis.get('southon') != '0'
+        # return self.redis.get('southon') != '0'
         return False
-
 
     def showLevels(self):
         print("Not Implemented")
 
-
     def getSystemValue(self, key, default):
         stat = status.delay().get(timeout=self.timeout)
-
 
     def getSystemStatus(self):
         try:
@@ -98,7 +89,6 @@ class DitchController(object):
 
         return None
 
-
     def showSystemStatus(self):
         print("Showing System Status:")
         stat = self.getSystemStatus()
@@ -109,7 +99,6 @@ class DitchController(object):
             print("South: Call:%s On:%s" % (stat['SC'], stat['S']))
             print("Ditch: %s\" (%d)" % ("?", int(stat['Ditch'])))
             print("Sump: %s\" (%d)" % ("?", int(stat['Sump'])))
-
 
     def lprint(self, string):
         print(string)

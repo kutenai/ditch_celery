@@ -5,9 +5,9 @@ import json
 import re
 import MySQLdb
 
-class DBCursor(object):
 
-    def __init__(self,conn,database):
+class DBCursor(object):
+    def __init__(self, conn, database):
         self.curs = None
         if conn:
             try:
@@ -27,7 +27,7 @@ class DBCursor(object):
     def cursor(self):
         return self.curs
 
-    def execute(self,sql):
+    def execute(self, sql):
         if self.curs:
             self.curs.execute(sql)
 
@@ -49,7 +49,7 @@ class DBCursor(object):
 
         row = self.curs.fetchone()
         if row is None: return None
-        cols = [ d[0] for d in self.curs.description ]
+        cols = [d[0] for d in self.curs.description]
         return dict(zip(cols, row))
 
     def fetchallDict(self):
@@ -71,12 +71,14 @@ class DBCursor(object):
         """
 
         class DBRow:
-            def __init__(self,row):
+            def __init__(self, row):
                 self.row = row
-            def __getattr__(self,item):
+
+            def __getattr__(self, item):
                 if self.row.has_key(item):
                     return self.row[item]
                 raise Exception("Item %s does not exist." % item)
+
             def __repr__(self):
                 s = "DBRow "
                 s = s + ";".join([key + ":" + str(self.row[key]) for key in self.row.keys()])
@@ -111,7 +113,7 @@ class DBCursor(object):
             sets.append("%s = %%s" % key)
             set = ', '.join(sets)
             qq = "UPDATE %s SET %s WHERE %s = %%s" % (table, set, idName,)
-            self.curs.execute(qq, tuple(data.values()+[id]))
+            self.curs.execute(qq, tuple(data.values() + [id]))
 
     def insertRow(self, table, **data):
         """
@@ -138,11 +140,11 @@ class DBCursor(object):
         """
         return self.conn.insert_id()
 
-class DBConnection(object):
 
+class DBConnection(object):
     dests = ['local']
 
-    def __init__(self,dest="local",db=None):
+    def __init__(self, dest="local", db=None):
 
         # Use passed in value if set
         if db:
@@ -151,20 +153,19 @@ class DBConnection(object):
         if dest == 'local':
             self.hosts = [
                 {
-                    'host':'localhost',
-                    'port':3306
+                    'host': 'localhost',
+                    'port': 3306
                 },
             ]
             self.port = 3306
-            #self.user = 'ditchuser'
-            #self.pw = 'bywasbashichri'
-            self.user ='root'
+            # self.user = 'ditchuser'
+            # self.pw = 'bywasbashichri'
+            self.user = 'root'
             self.pw = '!jake@maggie12'
             if not db:
                 self.db = 'ditchmon'
         else:
             raise "Invalid DB Destination"
-
 
         self.conn = None
         self.curs = None
@@ -202,7 +203,7 @@ class DBConnection(object):
                     host = hostval['host']
                     port = hostval['port']
                     try:
-                        #print "Trying DB connection to %s at %d" % (host,port)
+                        # print "Trying DB connection to %s at %d" % (host,port)
                         conn = MySQLdb.connect(host=host,
                                                port=port,
                                                user=self.user,
@@ -214,13 +215,12 @@ class DBConnection(object):
                     if conn:
                         break
 
-
                 if not conn:
-                    print ("DB Connection to %s:%s failed." % (host,port))
+                    print ("DB Connection to %s:%s failed." % (host, port))
                     raise Exception("Failed to open Database connection.", "-1001")
                 else:
                     self.conn = conn
-                    #conn.autocommit()
+                    # conn.autocommit()
 
             except MySQLdb.Error as e:
                 print "Failed to open connection. MySQLdb error: %d:%s" % (e.args[0], e.args[1])
@@ -236,17 +236,17 @@ class DBConnection(object):
         conn = self.getConnection()
 
         if not conn:
-            raise Exception("Could not establish Database connection.",'-1000')
+            raise Exception("Could not establish Database connection.", '-1000')
 
-        return DBCursor(conn,self.db)
+        return DBCursor(conn, self.db)
 
     def insertId(self):
 
         return self.conn.insert_id()
 
-class DBConnUser(object):
 
-    def __init__(self,connection):
+class DBConnUser(object):
+    def __init__(self, connection):
         self.conn = connection
 
     def getCursor(self):
@@ -257,7 +257,6 @@ class DBConnUser(object):
 
 
 def main():
-
     # Left over.. could put some test code here.
     pass
 

@@ -4,8 +4,8 @@ import argparse
 
 from Ditch.DitchManager import DitchManager
 
-def runTests():
 
+def runTests():
     mgr = DitchManager('localhost', 6388, 9)
 
     # Test Alarms
@@ -19,6 +19,7 @@ def runTests():
     mgr.alarmChecks(14)
     mgr.alarmChecks(12)
 
+
 def start_server():
     """ Start the server.
 
@@ -28,13 +29,13 @@ def start_server():
     """
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--host",default='127.0.0.1')
+    parser.add_argument("--host", default='127.0.0.1')
 
-    parser.add_argument("--port",type=int,default=6388)
+    parser.add_argument("--port", type=int, default=6388)
 
-    parser.add_argument("--db",type=int,default=0)
+    parser.add_argument("--db", type=int, default=0)
 
-    parser.add_argument("--debug",action="store_true")
+    parser.add_argument("--debug", action="store_true")
 
     parser.add_argument("--test", action='store_true', help="Enter test mode")
 
@@ -45,11 +46,11 @@ def start_server():
 
     host = args.host
 
-    redismgr = DitchManager(host,args.port, args.db)
+    redismgr = DitchManager(host, args.port, args.db)
     redismgr.debug = args.debug == True
     redismgr.start()
     redismgr.run()
 
+
 if __name__ == "__main__":
     start_server()
-

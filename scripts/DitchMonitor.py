@@ -6,16 +6,17 @@ import json
 import redis
 from redis.exceptions import (
     ConnectionError,
-    )
+)
 import optparse
 import os
 import glob
 import re
 import sys
-from time import time,sleep,localtime,strftime
+from time import time, sleep, localtime, strftime
 import IrrigationAPI
 from DBConnection import DBConnection
 from DBDitch import *
+
 
 class DitchMonitor(object):
     """
@@ -32,7 +33,7 @@ class DitchMonitor(object):
 
     """
 
-    def __init__(self,host,port):
+    def __init__(self, host, port):
 
         self.host = host
         self.port = port
@@ -47,7 +48,7 @@ class DitchMonitor(object):
         self.reportdest = 'kutena@me.com'
         self.tmpdir = "/tmp"
 
-        self.resendRate = 15*60
+        self.resendRate = 15 * 60
 
         self.api = IrrigationAPI.IrrigationAPI()
         self.api.initHardware()
@@ -63,7 +64,7 @@ class DitchMonitor(object):
         """
 
         try:
-            self.redis.set('DitchredisCheck',0)
+            self.redis.set('DitchredisCheck', 0)
         except:
             # Redis is not working!
             subject = "DitchMonitor: Redis Database not responding!"
@@ -71,11 +72,10 @@ class DitchMonitor(object):
 The Redis database at host=%s and port=%d is not responding.
 DitchMonitor will exit and restart again in one minute.
             """ % (self.host, self.port)
-            self.sendMessage(subject,message)
+            self.sendMessage(subject, message)
             sys.exit(2)
 
-
-    def addError(self,errmsg):
+    def addError(self, errmsg):
 
         self.errors.append(errmsg)
 
@@ -85,7 +85,7 @@ DitchMonitor will exit and restart again in one minute.
         Clear the current error list.
         """
         msg = "\n".join(self.errors)
-        self.errors=  []
+        self.errors = []
         return msg
 
     def reportUpdate(self):
@@ -105,41 +105,40 @@ DitchMonitor will exit and restart again in one minute.
         message = self.getErrorString()
         previousMessage = self.redis.get('DitchPreviousMessage')
 
-
         if previousMessage == "" and message != "":
             # New errors.
             subject = "DitchMonitor Monitor Errors Detected."
-            self.redis.set('DitchPreviousMessage',message)
-            self.redis.set('DitchPreviousMessageTime',time())
-            self.sendMessage(subject,message)
+            self.redis.set('DitchPreviousMessage', message)
+            self.redis.set('DitchPreviousMessageTime', time())
+            self.sendMessage(subject, message)
         elif previousMessage != "" and message == "":
             # Errors fixed..
             subject = "DitchMonitor: Server back to Normal."
-            self.redis.set('DitchPreviousMessage',message)
-            self.redis.set('DitchPreviousMessageTime',time())
-            self.sendMessage(subject,message)
+            self.redis.set('DitchPreviousMessage', message)
+            self.redis.set('DitchPreviousMessageTime', time())
+            self.sendMessage(subject, message)
         elif previousMessage != message:
             # Changed Errors
             subject = "DitchMonitor Monitor New Errors Detected."
-            self.redis.set('DitchPreviousMessage',message)
-            self.redis.set('DitchPreviousMessageTime',time())
-            self.sendMessage(subject,message)
+            self.redis.set('DitchPreviousMessage', message)
+            self.redis.set('DitchPreviousMessageTime', time())
+            self.sendMessage(subject, message)
         else:
             # Previous message == message
             previousTime = self.redis.get('DitchPreviousMessageTime')
             try:
                 previousTime = float(previousTime)
             except:
-                self.redis.set('DitchPreviousMessageTime',time())
+                self.redis.set('DitchPreviousMessageTime', time())
                 previousTime = time()
 
             if time() - previousTime > self.resendRate:
-                self.redis.set('DitchPreviousMessageTime',time())
+                self.redis.set('DitchPreviousMessageTime', time())
                 subject = "DitchMonitor Errors (resent on %s)" \
-                    % strftime("%m-%d-%Y at %H:%M",localtime())
-                self.sendMessage(subject,message)
+                          % strftime("%m-%d-%Y at %H:%M", localtime())
+                self.sendMessage(subject, message)
 
-    def sendMessage(self,subject,message):
+    def sendMessage(self, subject, message):
         """
         Send an e-mail message to the given recipient(s)
         """
@@ -151,7 +150,7 @@ DitchMonitor will exit and restart again in one minute.
 
         server = smtplib.SMTP('smtp.gmail.com:587')
         server.starttls()
-        server.login(self.username,self.password)
+        server.login(self.username, self.password)
         server.sendmail(self.username, [self.reportdest], msg.as_string())
         server.quit()
 
@@ -170,40 +169,40 @@ DitchMonitor will exit and restart again in one minute.
         else:
             return False
 
-    def setPump(self,bOn):
+    def setPump(self, bOn):
 
         if bOn and self.sump > 200:
             self.api.pumpEnable(True)
-            self.redis.set("Ditch_pumpOn","1")
+            self.redis.set("Ditch_pumpOn", "1")
             print ("Pump turned on")
         else:
             self.api.pumpEnable(False)
-            self.redis.set("Ditch_pumpOn","0")
+            self.redis.set("Ditch_pumpOn", "0")
             print ("Pump turned off")
 
-    def setNorthZone(self,bOn):
+    def setNorthZone(self, bOn):
 
         if bOn and self.isPumpOn():
             self.api.northZoneEnable(True)
-            self.redis.set("Ditch_northZoneOn","1")
+            self.redis.set("Ditch_northZoneOn", "1")
             print ("North zone on")
         else:
             self.api.northZoneEnable(False)
-            self.redis.set("Ditch_northZoneOn","0")
+            self.redis.set("Ditch_northZoneOn", "0")
             print ("North zone off")
 
-    def setSouthZone(self,bOn):
+    def setSouthZone(self, bOn):
 
         if bOn and self.isPumpOn():
             self.api.southZoneEnable(True)
-            self.redis.set("Ditch_southZoneOn","1")
+            self.redis.set("Ditch_southZoneOn", "1")
             print ("South zone on")
         else:
             self.api.southZoneEnable(False)
-            self.redis.set("Ditch_southZoneOn","0")
+            self.redis.set("Ditch_southZoneOn", "0")
             print ("South zone off")
 
-    def setLevels(self,ditch,sump):
+    def setLevels(self, ditch, sump):
 
         self.ditch = ditch
         self.sump = sump
@@ -224,12 +223,10 @@ DitchMonitor will exit and restart again in one minute.
     def levelChecks(self):
 
         if self.sumpLow and self.isPumpOn():
-
             print("Sump Low!!!!")
             self.setPump(False)
             self.setNorthZone(False)
             self.setSouthZone(False)
-
 
     def getSystemStatus(self):
 
@@ -238,12 +235,12 @@ DitchMonitor will exit and restart again in one minute.
             ditch = s['Ditch']
             sump = s['Sump']
 
-            self.setLevels(int(ditch),int(sump))
+            self.setLevels(int(ditch), int(sump))
 
             print ("Logged Ditch Values Ditch:%d Sump:%d"
-                % (int(ditch), int(sump)))
+                   % (int(ditch), int(sump)))
 
-            self.db.insertLogEntry(int(ditch),int(sump),0)
+            self.db.insertLogEntry(int(ditch), int(sump), 0)
         else:
             print("Log failed to get sensor data!!")
 
@@ -297,6 +294,7 @@ DitchMonitor will exit and restart again in one minute.
         self.levelChecks()
         self.callCheck()
 
+
 def main():
     """
     Parse command line arguments.
@@ -308,35 +306,35 @@ def main():
     usage = "usage: %prog "
     parser = optparse.OptionParser(usage)
     parser.add_option("--remote",
-        action="store_true",
-        dest="remote",
-        default=False
-    )
+                      action="store_true",
+                      dest="remote",
+                      default=False
+                      )
     parser.add_option("--host",
-        action="store",
-        type="string",
-        dest="host",
-        default='127.0.0.1'
-    )
+                      action="store",
+                      type="string",
+                      dest="host",
+                      default='127.0.0.1'
+                      )
 
     parser.add_option("-s", "--sleeptime",
-        action="store",
-        type="int",
-        dest="sleeptime",
-        default=60)
+                      action="store",
+                      type="int",
+                      dest="sleeptime",
+                      default=60)
 
     parser.add_option("-l", "--loop",
-        action="store_true", dest="loop",
-        help="Loop forever.")
+                      action="store_true", dest="loop",
+                      help="Loop forever.")
 
     parser.add_option("-n", "--nloops",
-        action="store", dest="nloops",
-        type="int",
-        help="Loop n times.")
+                      action="store", dest="nloops",
+                      type="int",
+                      help="Loop n times.")
 
     parser.add_option("-d", "--duration",
-        action="store", dest="duration",
-        type="int", help="Loop for N seconds.")
+                      action="store", dest="duration",
+                      type="int", help="Loop for N seconds.")
 
     (options, args) = parser.parse_args()
 
@@ -344,7 +342,6 @@ def main():
         host = 'partsim.eeweb.com'
     else:
         host = options.host
-
 
     mon = DitchMonitor(host, 6379)
 
@@ -366,7 +363,7 @@ def main():
         while runTime < options.duration:
             sleep(options.sleeptime)
             mon.runChecks()
-            runTime = time()-loopStartTime+options.sleeptime
+            runTime = time() - loopStartTime + options.sleeptime
     else:
         # One time.
         print("One time execution.")
