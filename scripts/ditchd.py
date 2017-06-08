@@ -23,7 +23,7 @@ from daemon import Daemon
 class DitchDaemon(Daemon):
     def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         super(DitchDaemon, self).__init__(pidfile, stdin, stdout, stderr)
-        self.host = 'gardenbuzz.com'
+        self.host = 'ditch.gardenbuzz.com'
         self.port = 6379
         self.db = 5
         self.instanceid = None
@@ -67,7 +67,7 @@ class DitchDaemon(Daemon):
 
         pid = os.getpid()
 
-        app = DitchManager(host='gardenbuzz.com',
+        app = DitchManager(host='ditch.gardenbuzz.com',
                            port=6379,
                            db=5)
         app.setDaemon(True)

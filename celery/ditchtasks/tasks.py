@@ -26,7 +26,7 @@ api = IrrigationAPI()
 def status():
     logger.info("Getting system status..")
     stat = api.getSystemStatus()
-    r = redis.StrictRedis(host='gardenbuzz.com', port=6379, db=3)
+    r = redis.StrictRedis(host='ditch.gardenbuzz.com', port=6379, db=3)
     r.set('ditch_status', json.dumps(stat))
 
     return json.dumps(stat)
