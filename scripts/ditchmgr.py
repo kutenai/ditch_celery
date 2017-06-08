@@ -29,11 +29,11 @@ def start_server():
     """
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--host", default='127.0.0.1')
+    parser.add_argument("--host", default='ditch.gardenbuzz.com')
 
-    parser.add_argument("--port", type=int, default=6388)
+    parser.add_argument("--port", type=int, default=6379)
 
-    parser.add_argument("--db", type=int, default=0)
+    parser.add_argument("--db", type=int, default=5)
 
     parser.add_argument("--debug", action="store_true")
 
@@ -47,7 +47,7 @@ def start_server():
     host = args.host
 
     redismgr = DitchManager(host, args.port, args.db)
-    redismgr.debug = args.debug == True
+    redismgr.debug = args.debug
     redismgr.start()
     redismgr.run()
 
