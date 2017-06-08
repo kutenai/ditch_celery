@@ -19,6 +19,7 @@ class IrrigationAPI(object):
         self.lastResult = None
         self.port = None
         self.printer = None
+        self.baudrate = 9600
         self._initialized = False
 
     def setPrintObj(self, pobj):
@@ -34,7 +35,7 @@ class IrrigationAPI(object):
 
     def Initialize(self):
         """
-        Initializie the serial port.
+        Initialize the serial port.
         """
         try:
             if not self._initialized:
@@ -261,9 +262,18 @@ class IrrigationAPI(object):
         if platform.system() == 'Darwin':
             """scan for available ports. return a list of device names."""
             ports = glob.glob('/dev/tty.usbserial-A600*')
-            return ports[0]
+            if ports:
+                return ports[0]
+        elif platform.system() == 'Linux':
+            """"""
+            ports = glob.glob('/dev/ttyUSB\d+')
+            if ports:
+                return ports[0]
         elif platform.system() == 'Windows':
             return "COM10"  # No super good way to determine this..
+        else:
+            raise Exception("Could not determine serial port on system{}".format(platform.system()))
+        raise Exception("Could not determine serial port")
 
 
 def main():
