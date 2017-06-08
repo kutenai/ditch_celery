@@ -58,6 +58,7 @@ class IrrigationAPI(object):
             self.baudrate = 9600
 
         self.port = self.getPorts()
+        print("Using serial port {}".format(self.port))
 
         if self.ser:
             ''' Reset to new baud rate '''
@@ -266,7 +267,7 @@ class IrrigationAPI(object):
                 return ports[0]
         elif platform.system() == 'Linux':
             """"""
-            ports = glob.glob('/dev/ttyUSB\d+')
+            ports = glob.glob('/dev/ttyUSB*')
             if ports:
                 return ports[0]
         elif platform.system() == 'Windows':
